@@ -1,0 +1,171 @@
+name: Incident Switchboard
+
+run-name: >-
+  ${{ 
+    github.event_name == 'workflow_dispatch' 
+    && format('{0} {1} [{2}]', 
+        inputs.severity == 'high' && 'HIGH' || inputs.severity == 'medium' && 'MEDIUM' || 'LOW', 
+        inputs.deep_scan && 'SCAN' || '', 
+        inputs.reason || 'No reason provided'
+       )
+    || format('Automatic Run: {0} by {1}', github.event_name, github.actor) 
+  }}
+ 
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      severity:
+        description: 'Incident Severity Level'
+        type: choice
+        options:
+          - low
+          - medium
+          - high
+        default: 'low'
+        required: true
+      deep_scan:
+        description: 'Perform a deep system scan?'
+        type: boolean
+        default: false
+        required: true
+      skip_tests:
+        description: 'Skip the standard test suite?'
+        type: boolean
+        default: false
+        required: true
+      reason:
+        description: 'Reason for manual invocation'
+        type: string
+        required: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print Core Metadata
+        run: |
+          echo "Event type: ${{ github.event_name }}"
+          echo "Git reference: ${{ github.ref }}"
+          echo "Triggered by: ${{ github.actor }}"
+          echo "Run number: ${{ github.run_number }}"
+
+      - name: Print Manual Input Parameters
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Severity chosen: ${{ inputs.severity }}"
+          echo "Deep scan requested: ${{ inputs.deep_scan }}"
+          echo "Skip tests requested: ${{ inputs.skip_tests }}"
+          echo "Reason: ${{ inputs.reason }}"
+
+      - name: Print Automatic Notice
+        if: github.event_name != 'workflow_dispatch'
+        run: |
+          echo "The run was automatic and no reason was supplied."
+
+      - name: Handle Low Severity Message
+        if: github.event_name == 'workflow_dispatch' && inputs.severity == 'low'
+        run: |
+          echo "Severity Notice [LOW]: Standard tracking initiated. Monitor systems normally."
+
+      - name: Handle Medium Severity Message
+        if: github.event_name == 'workflow_dispatch' && inputs.severity == 'medium'
+        run: |
+          echo "Severity Notice [MEDIUM]: Attention required. Alerts dispatched to engineering squad."
+
+      - name: Handle High Severity Message
+        if: github.event_name == 'workflow_dispatch' && inputs.severity == 'high'
+        run: |
+          echo "Severity Notice [HIGH]: Critical event. Escalating to emergency response channels immediately."
+
+  tests:
+    needs: triage
+    if: |
+      always() && 
+      needs.triage.result == 'success' && 
+      (github.event_name != 'workflow_dispatch' || inputs.skip_tests == false)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Initialize Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install Project Dependencies
+        run: |
+          npm ci
+
+      - name: Execute Application Test Suite
+        run: |
+          npm test
+
+  scan:
+    needs: triage
+    if: |
+      always() && 
+      needs.triage.result == 'success' && 
+      github.event_name == 'workflow_dispatch' && 
+      (inputs.deep_scan == true || inputs.severity == 'high')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Provision jq Utility
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
+
+      - name: Generate Scan Report Payload
+        env:
+          SEVERITY: ${{ inputs.severity }}
+          DEEP_SCAN: ${{ inputs.deep_scan }}
+          ACTOR: ${{ github.actor }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          jq -n \
+            --arg sev "$SEVERITY" \
+            --arg deep "$DEEP_SCAN" \
+            --arg act "$ACTOR" \
+            --arg run "$RUN_NUMBER" \
+            --arg time "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+            '{severity: $sev, deep_scan: ($deep == "true"), operator: $act, run_id: $run, timestamp: $time}' > scan.json
+
+      - name: Parse and Print Verification Data
+        run: |
+          echo "Verified Operator: $(jq -r '.operator' scan.json)"
+          echo "Verified Timestamp: $(jq -r '.timestamp' scan.json)"
+
+  report:
+    needs: [tests, scan]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Analyze Dependent Job Statuses
+        run: |
+          echo "Tests execution outcome: ${{ needs.tests.result }}"
+          echo "Scan execution outcome: ${{ needs.scan.result }}"
+
+      - name: Evaluate Global Pipeline Health
+        if: |
+          (needs.tests.result == 'success' || needs.tests.result == 'skipped') &&
+          (needs.scan.result == 'success' || needs.scan.result == 'skipped')
+        run: |
+          echo "Pipeline Summary: All active operations finished successfully."
+
+      - name: Flag Pipeline Failures
+        if: needs.tests.result == 'failure' || needs.scan.result == 'failure'
+        run: |
+          echo "Pipeline Summary: Critical failure detected during switchboard operations."
+
+      - name: Close Connection
+        run: |
+          echo "Switchboard closed"

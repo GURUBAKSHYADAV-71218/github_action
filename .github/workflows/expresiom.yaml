@@ -1,5 +1,5 @@
 name: Expression Workflow
-run-name: "Using Expressions || DEBUG: ${{ inputs.debug }}"
+run-name: "Using Expressions || DEBUG: ${{ inputs.debug && 'ON' }}"
 
 on:
   workflow_dispatch:
