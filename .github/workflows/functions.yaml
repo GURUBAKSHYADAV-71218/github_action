@@ -34,6 +34,7 @@ jobs:
   # --------------------------------------------------
   # 1. STRING FUNCTIONS
   # --------------------------------------------------
+
   string-functions:
     runs-on: ubuntu-latest
 
@@ -62,6 +63,7 @@ jobs:
   # --------------------------------------------------
   # 2. CONDITIONAL FUNCTIONS
   # --------------------------------------------------
+
   condition-functions:
     runs-on: ubuntu-latest
 
@@ -90,6 +92,7 @@ jobs:
   # --------------------------------------------------
   # 3. LOGICAL FUNCTIONS / OPERATORS
   # --------------------------------------------------
+
   logical-functions:
     runs-on: ubuntu-latest
 
@@ -114,6 +117,7 @@ jobs:
   # --------------------------------------------------
   # 4. COMBINING FUNCTIONS
   # --------------------------------------------------
+
   decision:
     runs-on: ubuntu-latest
 
@@ -129,7 +133,6 @@ jobs:
           echo "================================="
           echo "Deployment Decision"
           echo "================================="
-
           echo "File        : ${{ inputs.filename }}"
           echo "Environment : ${{ inputs.environment }}"
           echo "Tags        : ${{ inputs.tags }}"
@@ -168,6 +171,7 @@ jobs:
   # --------------------------------------------------
   # 5. FAILURE + ALWAYS() DEMO
   # --------------------------------------------------
+
   error-demo:
     runs-on: ubuntu-latest
 
