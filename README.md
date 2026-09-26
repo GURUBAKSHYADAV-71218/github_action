@@ -36,6 +36,10 @@ github_action/
 ├── .gitignore
 └── README.md
 
+
+
+The .github/workflows/ directory contains the automation workflows used in this project.
+
 These workflows help practice:
 
 Code Push
