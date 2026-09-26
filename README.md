@@ -36,9 +36,16 @@ github_action/
 ├── .gitignore
 └── README.md
 
+These workflows help practice:
+
 Code Push
     ↓
 GitHub Repository
     ↓
 GitHub Actions
-    
+    ↓
+Automated Workflow
+    ↓
+Checks / Validation
+    ↓
+Workflow Result
