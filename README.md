@@ -12,3 +12,11 @@ This repository demonstrates how GitHub Actions can be used to automate developm
 - Managing branches and pull requests
 - Integrating CI/CD practices with a React application
 
+## 🛠️ Tech Stack
+
+- React.js
+- JavaScript
+- Git & GitHub
+- GitHub Actions
+- Node.js
+- npm
