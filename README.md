@@ -20,3 +20,18 @@ This repository demonstrates how GitHub Actions can be used to automate developm
 - GitHub Actions
 - Node.js
 - npm
+
+## 📂 Project Structure
+
+```text
+github_action/
+│
+├── .github/
+│   └── workflows/
+│       └── GitHub Actions workflows
+│
+├── react-app/
+│   └── React application
+│
+├── .gitignore
+└── README.md
