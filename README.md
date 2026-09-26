@@ -35,3 +35,10 @@ github_action/
 │
 ├── .gitignore
 └── README.md
+
+Code Push
+    ↓
+GitHub Repository
+    ↓
+GitHub Actions
+    
